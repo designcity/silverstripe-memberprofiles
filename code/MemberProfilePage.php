@@ -507,6 +507,12 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 */
 	public function register($data, Form $form) {
 		if($member = $this->addMember($form)) {
+				Session::set('Memberprofile.SUBSCRIPTIONEMAIL', $member->Email);
+			if(isset($data['subscription_type'])) {
+				Session::set('Memberprofile.SUBSCRIPTIONTYPE', $data['subscription_type']);
+			} else {
+				Session::set('Memberprofile.SUBSCRIPTIONTYPE', 'monthly');
+			}
 			if(!$this->RequireApproval && $this->EmailType != 'Validation' && !$this->AllowAdding) {
 				$member->logIn();
 			}
@@ -538,10 +544,31 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 * @return array
 	 */
 	public function afterregistration() {
-		return array (
-			'Title'   => $this->obj('AfterRegistrationTitle'),
-			'Content' => $this->obj('AfterRegistrationContent')
-		);
+
+		$s_type = Session::get('Memberprofile.SUBSCRIPTIONTYPE');
+		if($s_type == null) {
+			return $this->redirectBack();
+		}
+		$config = SiteConfig::current_site_config();
+		if($s_type == 'yearly') {
+			$subscription = $config->YearlySubscription();
+		} elseif($s_type == 'monthly') {
+			$subscription = $config->MonthlySubscription();
+		}
+		$template = new SSViewer("SubscriptionPaymentLink");
+		$subscriptionURL = $template->process(new ArrayData(array(
+			'PayPalMerchantID' => $config->PayPalMerchantID,
+			'SubscriptionType' => $s_type == 'monthly' ? 'Monthly' : 'Yearly',
+			'ItemNumber' => ($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy Subscription for ' . Session::get('Memberprofile.SUBSCRIPTIONEMAIL'),
+			'Price' => $subscription->Price
+		)));
+		Session::clear('Memberprofile.SUBSCRIPTIONEMAIL');
+		Session::clear('Memberprofile.SUBSCRIPTIONTYPE');
+		return $this->redirect($subscriptionURL->value);
+		//return array (
+		//	'Title'   => $this->obj('AfterRegistrationTitle'),
+		//	'Content' => $this->obj('AfterRegistrationContent')
+		//);
 	}
 
 	/**
