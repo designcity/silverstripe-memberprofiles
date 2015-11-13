@@ -557,10 +557,12 @@ class MemberProfilePage_Controller extends Page_Controller {
 		}
 		$template = new SSViewer("SubscriptionPaymentLink");
 		$subscriptionURL = $template->process(new ArrayData(array(
-			'PayPalMerchantID' => $config->PayPalMerchantID,
-			'SubscriptionType' => $s_type == 'monthly' ? 'Monthly' : 'Yearly',
-			'ItemNumber' => ($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy Subscription for ' . Session::get('Memberprofile.SUBSCRIPTIONEMAIL'),
-			'Price' => $subscription->Price
+			'PayPalMerchantID' => urlencode($config->PayPalMerchantID),
+			'SubscriptionType' => urlencode($s_type == 'monthly' ? 'Monthly' : 'Yearly'),
+			'ItemNumber' => urlencode(($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy Subscription for ' . Session::get('Memberprofile.SUBSCRIPTIONEMAIL')),
+			'Price' => urlencode($subscription->Price),
+			'MemberID' => Member::currentUserID() ? Member::currentUserID() : false,
+			'NotifyURL' => urlencode("abdy.info/subscribed"),
 		)));
 		Session::clear('Memberprofile.SUBSCRIPTIONEMAIL');
 		Session::clear('Memberprofile.SUBSCRIPTIONTYPE');
