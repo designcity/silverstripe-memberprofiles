@@ -394,6 +394,7 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 * @return array
 	 */
 	public function index() {
+		FB("INDEX");
 		if (isset($_GET['BackURL'])) {
 			Session::set('MemberProfile.REDIRECT', $_GET['BackURL']);
 		}
@@ -411,10 +412,13 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 * @return array
 	 */
 	protected function indexRegister() {
+		FB("RegisterIndex");
 		if(!$this->AllowRegistration) return Security::permissionFailure($this, _t (
 			'MemberProfiles.CANNOTREGPLEASELOGIN',
 			'You cannot register on this profile page. Please login to edit your profile.'
 		));
+
+		//die(print_r($this->request->getVars()));
 
 		return array (
 			'Title'   => $this->obj('RegistrationTitle'),
@@ -539,6 +543,25 @@ class MemberProfilePage_Controller extends Page_Controller {
 	}
 
 	/**
+	 * returns an SS_Viewer object which is perfect to use as a link
+	 * to a paypal subscription
+	 *
+	 *@return String URL of a subscription payment
+	 */
+	public function SubscriptionPaymentTemplate($paypalID, $s_type, $item_name, $price) {
+		$template = new SSViewer("SubscriptionPaymentLink");
+		$subscriptionURL = $template->process(new ArrayData(array(
+			'PayPalMerchantID' => urlencode($paypalID),
+			'SubscriptionType' => urlencode($s_type == 'monthly' ? 'Monthly' : 'Yearly'),
+			'ItemNumber' => urlencode($item_name),
+			'Price' => urlencode($price),
+			'MemberID' => Member::currentUserID() ? Member::currentUserID() : false,
+			'NotifyURL' => urlencode(Controller::join_links(Director::absoluteBaseURLWithAuth(), "subscribed/ipnhook")),
+		)));
+		return $subscriptionURL;
+	}
+
+	/**
 	 * Returns the after registration content to the user.
 	 *
 	 * @return array
@@ -555,22 +578,18 @@ class MemberProfilePage_Controller extends Page_Controller {
 		} elseif($s_type == 'monthly') {
 			$subscription = $config->MonthlySubscription();
 		}
-		$template = new SSViewer("SubscriptionPaymentLink");
-		$subscriptionURL = $template->process(new ArrayData(array(
-			'PayPalMerchantID' => urlencode($config->PayPalMerchantID),
-			'SubscriptionType' => urlencode($s_type == 'monthly' ? 'Monthly' : 'Yearly'),
-			'ItemNumber' => urlencode(($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy Subscription for ' . Session::get('Memberprofile.SUBSCRIPTIONEMAIL')),
-			'Price' => urlencode($subscription->Price),
-			'MemberID' => Member::currentUserID() ? Member::currentUserID() : false,
-			'NotifyURL' => urlencode("abdy.info/subscribed"),
-		)));
+		$item_name = ($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy Subscription for ' . Session::get('Memberprofile.SUBSCRIPTIONEMAIL');
+		$price = $subscription->Price;
+
+		$subscriptionURL = $this->SubscriptionPaymentTemplate(
+			$config->PayPalMerchantID,
+			$s_type,
+			$item_name,
+			$price
+		);
 		Session::clear('Memberprofile.SUBSCRIPTIONEMAIL');
 		Session::clear('Memberprofile.SUBSCRIPTIONTYPE');
 		return $this->redirect($subscriptionURL->value);
-		//return array (
-		//	'Title'   => $this->obj('AfterRegistrationTitle'),
-		//	'Content' => $this->obj('AfterRegistrationContent')
-		//);
 	}
 
 	/**
