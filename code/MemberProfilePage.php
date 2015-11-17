@@ -412,7 +412,6 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 * @return array
 	 */
 	protected function indexRegister() {
-		FB("RegisterIndex");
 		if(!$this->AllowRegistration) return Security::permissionFailure($this, _t (
 			'MemberProfiles.CANNOTREGPLEASELOGIN',
 			'You cannot register on this profile page. Please login to edit your profile.'
@@ -548,7 +547,7 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 *
 	 *@return String URL of a subscription payment
 	 */
-	public function SubscriptionPaymentTemplate($paypalID, $s_type, $item_name, $price) {
+	public function SubscriptionPaymentTemplate($paypalID, $s_type, $item_name, $price, $modify=false) {
 		$template = new SSViewer("SubscriptionPaymentLink");
 		$subscriptionURL = $template->process(new ArrayData(array(
 			'PayPalMerchantID' => urlencode($paypalID),
@@ -557,6 +556,7 @@ class MemberProfilePage_Controller extends Page_Controller {
 			'Price' => urlencode($price),
 			'MemberID' => Member::currentUserID() ? Member::currentUserID() : false,
 			'NotifyURL' => urlencode(Controller::join_links(Director::absoluteBaseURLWithAuth(), "subscribed/ipnhook")),
+			'CanModify' => $modify,
 		)));
 		return $subscriptionURL;
 	}
@@ -585,8 +585,19 @@ class MemberProfilePage_Controller extends Page_Controller {
 			$config->PayPalMerchantID,
 			$s_type,
 			$item_name,
-			$price
+			$price,
+			true
 		);
+
+		$member = Member::currentUser();
+		$group = Group::get()->filter('Code', 'registered-user')->First();
+		if($group && $member) {
+			$group->Members()->add($member);
+			FB($member);
+			FB($group);
+		} else {
+			die();
+		}
 		Session::clear('Memberprofile.SUBSCRIPTIONEMAIL');
 		Session::clear('Memberprofile.SUBSCRIPTIONTYPE');
 		return $this->redirect($subscriptionURL->value);
