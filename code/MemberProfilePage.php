@@ -586,7 +586,6 @@ class MemberProfilePage_Controller extends Page_Controller {
 			$s_type,
 			$item_name,
 			$price,
-			true
 		);
 
 		$member = Member::currentUser();
