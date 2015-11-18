@@ -547,16 +547,16 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 *
 	 *@return String URL of a subscription payment
 	 */
-	public function SubscriptionPaymentTemplate($paypalID, $s_type, $item_name, $price, $modify=false) {
+	public function SubscriptionPaymentTemplate($paypalID, $s_type, $email, $price) {
 		$template = new SSViewer("SubscriptionPaymentLink");
+		$item_name = ($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy subscription for user ' . $email;
 		$subscriptionURL = $template->process(new ArrayData(array(
 			'PayPalMerchantID' => urlencode($paypalID),
 			'SubscriptionType' => urlencode($s_type == 'monthly' ? 'Monthly' : 'Yearly'),
 			'ItemNumber' => urlencode($item_name),
 			'Price' => urlencode($price),
-			'MemberID' => Member::currentUserID() ? Member::currentUserID() : false,
+			'MemberID' => (Member::currentUserID() ? Member::currentUserID() : false) . '%7C' . SS_Datetime::now()->URLDatetime(),
 			'NotifyURL' => urlencode(Controller::join_links(Director::absoluteBaseURLWithAuth(), "subscribed/ipnhook")),
-			'CanModify' => $modify,
 		)));
 		return $subscriptionURL;
 	}
@@ -578,22 +578,20 @@ class MemberProfilePage_Controller extends Page_Controller {
 		} elseif($s_type == 'monthly') {
 			$subscription = $config->MonthlySubscription();
 		}
-		$item_name = ($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy Subscription for ' . Session::get('Memberprofile.SUBSCRIPTIONEMAIL');
+		$item_name = Session::get('Memberprofile.SUBSCRIPTIONEMAIL');
 		$price = $subscription->Price;
 
 		$subscriptionURL = $this->SubscriptionPaymentTemplate(
 			$config->PayPalMerchantID,
 			$s_type,
-			$item_name,
-			$price,
+			$email,
+			$price
 		);
 
 		$member = Member::currentUser();
 		$group = Group::get()->filter('Code', 'registered-user')->First();
 		if($group && $member) {
 			$group->Members()->add($member);
-			FB($member);
-			FB($group);
 		} else {
 			die();
 		}
