@@ -588,13 +588,13 @@ class MemberProfilePage_Controller extends Page_Controller {
 			$price
 		);
 
-		$member = Member::currentUser();
-		$group = Group::get()->filter('Code', 'registered-user')->First();
-		if($group && $member) {
-			$group->Members()->add($member);
-		} else {
-			die();
-		}
+		//$member = Member::currentUser();
+		//$group = Group::get()->filter('Code', 'registered-user')->First();
+		//if($group && $member) {
+		//	$group->Members()->add($member);
+		//} else {
+		//	die();
+		//}
 		Session::clear('Memberprofile.SUBSCRIPTIONEMAIL');
 		Session::clear('Memberprofile.SUBSCRIPTIONTYPE');
 		return $this->redirect($subscriptionURL->value);
@@ -892,7 +892,7 @@ class MemberProfilePage_Controller extends Page_Controller {
 				'VisibilityNote',
 				'<p>' . _t(
 					'MemberProfiles.CHECKVISNOTE',
-					'Check fields below to make them visible on your public profile.'
+					''
 				) . '</p>'
 			));
 		}
