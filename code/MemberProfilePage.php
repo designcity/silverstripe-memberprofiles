@@ -394,7 +394,6 @@ class MemberProfilePage_Controller extends Page_Controller {
 	 * @return array
 	 */
 	public function index() {
-		FB("INDEX");
 		if (isset($_GET['BackURL'])) {
 			Session::set('MemberProfile.REDIRECT', $_GET['BackURL']);
 		}
@@ -422,7 +421,8 @@ class MemberProfilePage_Controller extends Page_Controller {
 		return array (
 			'Title'   => $this->obj('RegistrationTitle'),
 			'Content' => $this->obj('RegistrationContent'),
-			'Form'    => $this->RegisterForm()
+			'Form'    => $this->RegisterForm(),
+			'Mode'	  => 'register',
 		);
 	}
 
@@ -467,7 +467,8 @@ class MemberProfilePage_Controller extends Page_Controller {
 		return array (
 			'Title' => $this->obj('ProfileTitle'),
 			'Content' => $this->obj('ProfileContent'),
-			'Form'  => $form
+			'Form'  => $form,
+			'Mode' => 'profile',
 		);
 	}
 
