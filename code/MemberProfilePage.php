@@ -512,6 +512,14 @@ class MemberProfilePage_Controller extends Page_Controller {
 	public function register($data, Form $form) {
 		if($member = $this->addMember($form)) {
 				Session::set('Memberprofile.SUBSCRIPTIONEMAIL', $member->Email);
+
+			$member->SubscriptionStatus = 'Subscribed';
+			$member->PendingPayment = 0;
+			$member->SubscriptionStart = "2016-03-01 08:00:00";
+			$member->SubscriptionType = 'Monthly';
+			$member->addToGroupByCode('registered-user', 'Registered User');
+			$member->generateMemberID();
+			$member->write();
 			if(isset($data['subscription_type'])) {
 				Session::set('Memberprofile.SUBSCRIPTIONTYPE', $data['subscription_type']);
 			} else {
