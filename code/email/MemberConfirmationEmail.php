@@ -93,7 +93,7 @@ class MemberConfirmationEmail extends Email {
 			'$Member.Created'   => $member->obj('Created')->Nice()
 		);
 
-		foreach(array('Name', 'FirstName', 'Surname', 'Email') as $field) {
+		foreach(array('Name', 'FirstName', 'Surname', 'Email', 'Phone', 'Country', 'Timezone') as $field) {
 			$variables["\$Member.$field"] = $member->$field;
 		}
 

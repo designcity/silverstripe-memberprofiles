@@ -513,13 +513,51 @@ class MemberProfilePage_Controller extends Page_Controller {
 		if($member = $this->addMember($form)) {
 				Session::set('Memberprofile.SUBSCRIPTIONEMAIL', $member->Email);
 
-			$member->SubscriptionStatus = 'Subscribed';
-			$member->PendingPayment = 0;
-			$member->SubscriptionStart = "2016-03-01 08:00:00";
-			$member->SubscriptionType = 'Monthly';
-			$member->addToGroupByCode('registered-user', 'Registered User');
-			$member->generateMemberID();
-			$member->write();
+				$member->SubscriptionStatus = 'Subscribed';
+				$member->PendingPayment = 0;
+				$member->SubscriptionStart = "2016-03-01 08:00:00";
+				$member->SubscriptionType = 'Monthly';
+				$member->addToGroupByCode('registered-user', 'Registered User');
+				$member->generateMemberID();
+
+				$email = new Email();			
+
+				$email->setSubject("New Member Subscribed");
+				$email->setTo('family@abdy.info');
+				$email->setFrom('website@abdy.info');
+
+				//Extract member details
+				$memberID = $member->MemberID;
+				$memberEmail = $member->Email;
+				$memberFirstName = $member->FirstName;
+				$memberSurname = $member->Surname;
+				$memberPhone = $member->Phone;
+				$memberAddress = $member->Address;
+				$memberSubscriptionStart = $member->SubscriptionStart;
+				$memberSubscriptionType = $member->SubscriptionType;
+				$memberDateOfBirth = $member->DateOfBirth;
+				$memberCountry = $member->Country;
+				$memberTimezone = $member->Timezone;
+
+
+
+				$body = <<<EOT
+Member Details:<br />
+ID: $memberID<br />
+First name: $memberFirstName<br />
+Surname: $memberSurname<br />
+Email: $memberEmail<br />
+Phone: $memberPhone<br />
+Address: $memberAddress<br />
+Subscription Start: $memberSubscriptionStart<br />
+Subscription Type: $memberSubscriptionType<br />
+Date of Birth: $memberDateOfBirth<br />
+Country: $memberCountry<br />
+Timezone: $memberTimezone<br />
+EOT;
+				$email->setBody($body);
+				$email->send();
+				$member->write();
 			if(isset($data['subscription_type'])) {
 				Session::set('Memberprofile.SUBSCRIPTIONTYPE', $data['subscription_type']);
 			} else {
@@ -869,7 +907,6 @@ class MemberProfilePage_Controller extends Page_Controller {
 			$email = new MemberConfirmationEmail($this, $member);
 			$email->send();
 		}
-
 		$this->extend('onAddMember', $member);
 		return $member;
 	}
