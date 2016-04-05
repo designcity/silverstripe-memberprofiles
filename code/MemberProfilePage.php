@@ -513,10 +513,12 @@ class MemberProfilePage_Controller extends Page_Controller {
 		if($member = $this->addMember($form)) {
 				Session::set('Memberprofile.SUBSCRIPTIONEMAIL', $member->Email);
 
-				$member->SubscriptionStatus = 'Subscribed';
-				$member->PendingPayment = 0;
-				$member->SubscriptionStart = "2016-03-01 08:00:00";
-				$member->SubscriptionType = 'Monthly';
+				//$member->SubscriptionStatus = 'Subscribed';
+				//$member->PendingPayment = 1;
+				$member->SubscriptionStart = SS_Datetime::now();
+				if(isset($data['subscription_type'])) {
+					$member->SubscriptionType = $data['subscription_type'];
+				}
 				$member->addToGroupByCode('registered-user', 'Registered User');
 				$member->generateMemberID();
 
@@ -536,6 +538,7 @@ class MemberProfilePage_Controller extends Page_Controller {
 				$memberSubscriptionStart = $member->SubscriptionStart;
 				$memberSubscriptionType = $member->SubscriptionType;
 				$memberDateOfBirth = $member->DateOfBirth;
+				$memberCity= $member->City;
 				$memberCountry = $member->Country;
 				$memberTimezone = $member->Timezone;
 
@@ -552,6 +555,7 @@ Address: $memberAddress<br />
 Subscription Start: $memberSubscriptionStart<br />
 Subscription Type: $memberSubscriptionType<br />
 Date of Birth: $memberDateOfBirth<br />
+City: $memberCity<br />
 Country: $memberCountry<br />
 Timezone: $memberTimezone<br />
 EOT;
@@ -596,10 +600,10 @@ EOT;
 	 */
 	public function SubscriptionPaymentTemplate($paypalID, $s_type, $email, $price) {
 		$template = new SSViewer("SubscriptionPaymentLink");
-		$item_name = ($s_type == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy subscription for user ' . $email;
+		$item_name = (strtolower($s_type) == 'monthly' ? 'Monthly' : 'Yearly') . ' Abdy subscription for user ' . $email;
 		$subscriptionURL = $template->process(new ArrayData(array(
 			'PayPalMerchantID' => urlencode($paypalID),
-			'SubscriptionType' => urlencode($s_type == 'monthly' ? 'Monthly' : 'Yearly'),
+			'SubscriptionType' => urlencode(strtolower($s_type) == 'monthly' ? 'Monthly' : 'Yearly'),
 			'ItemNumber' => urlencode($item_name),
 			'Price' => urlencode($price),
 			'MemberID' => (Member::currentUserID() ? Member::currentUserID() : false) . '%7C' . SS_Datetime::now()->URLDatetime(),
@@ -625,7 +629,7 @@ EOT;
 		} elseif($s_type == 'monthly') {
 			$subscription = $config->MonthlySubscription();
 		}
-		$item_name = Session::get('Memberprofile.SUBSCRIPTIONEMAIL');
+		$email = Session::get('Memberprofile.SUBSCRIPTIONEMAIL');
 		$price = $subscription->Price;
 
 		$subscriptionURL = $this->SubscriptionPaymentTemplate(
@@ -644,7 +648,10 @@ EOT;
 		//}
 		Session::clear('Memberprofile.SUBSCRIPTIONEMAIL');
 		Session::clear('Memberprofile.SUBSCRIPTIONTYPE');
-		return $this->redirect($subscriptionURL->value);
+		print_r($subscriptionURL->value);
+
+		$this->redirect($subscriptionURL->value);
+		return true;
 	}
 
 	/**
