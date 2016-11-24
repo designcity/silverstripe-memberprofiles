@@ -648,9 +648,9 @@ EOT;
 		//}
 		Session::clear('Memberprofile.SUBSCRIPTIONEMAIL');
 		Session::clear('Memberprofile.SUBSCRIPTIONTYPE');
-		print_r($subscriptionURL->value);
+		//print_r($subscriptionURL->value);
 
-		$this->redirect($subscriptionURL->value);
+		$this->redirect(trim($subscriptionURL->value));
 		return true;
 	}
 
