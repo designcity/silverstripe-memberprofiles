@@ -562,6 +562,12 @@ EOT;
 				$email->setBody($body);
 				$email->send();
 				$member->write();
+
+				// set password again since otherwise it doesn't seem to set the right value...
+				if(array_key_exists('Password', $data) && is_array($data['Password']) && array_key_exists('_Password', $data['Password'])) {
+					$member->changePassword($data['Password']['_Password']);
+				}
+
 			if(isset($data['subscription_type'])) {
 				Session::set('Memberprofile.SUBSCRIPTIONTYPE', $data['subscription_type']);
 			} else {
